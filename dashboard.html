@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - E-Com+</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#5b21b6',
+            secondary: '#f59e0b',
+            textMain: '#1e293b',
+            background: '#f1f5f9',
+            success: '#16a34a'
+          }
+        }
+      }
+    };
+  </script>
+</head>
+
+<body class="bg-background text-textMain dark:bg-slate-950 dark:text-slate-100 transition-all">
+  <div id="app" class="flex min-h-screen flex-col md:flex-row">
+
+    <aside
+      class="w-full md:w-72 bg-white dark:bg-slate-900 shadow-xl flex flex-col border-b md:border-b-0 md:border-r dark:border-slate-800 transition-all duration-300 z-10">
+      <div class="flex items-center justify-between px-6 py-5 border-b dark:border-slate-800">
+        <h1 class="text-2xl font-extrabold text-primary tracking-tight">E-Com+</h1>
+        <button @click="toggleTheme"
+          class="p-2 rounded-xl bg-secondary/20 text-secondary hover:bg-secondary hover:text-white transition-all">
+          <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h1M4 12H3m15.364-6.364l.707.707M5.636 18.364l-.707.707m12.728 0l.707-.707M5.636 5.636l-.707-.707M12 5a7 7 0 000 14 7 7 0 000-14z" />
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M21.752 15.002A9.718 9.718 0 0112.004 22C6.478 22 2 17.523 2 12a9.999 9.999 0 0112.728-9.542.75.75 0 01.202 1.314A7.481 7.481 0 0014.5 12a7.478 7.478 0 007.128 4.956.75.75 0 01.124 1.47z" />
+          </svg>
+        </button>
+      </div>
+
+      <nav class="flex-1 p-5 space-y-3 overflow-x-auto md:overflow-visible flex md:block gap-2 md:gap-0">
+        <a href="dashboard.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold bg-secondary text-white whitespace-nowrap">
+          📊 <span class="md:inline">Dashboard</span>
+        </a>
+        <a href="produtos.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-textSecondary hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          📦 <span class="md:inline">Produtos</span>
+        </a>
+        <a href="clientes.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-textSecondary hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          👥 <span class="md:inline">Clientes</span>
+        </a>
+        <a href="fornecedores.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all text-textSecondary dark:text-slate-400 hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          🏭 <span class="md:inline">Fornecedores</span>
+        </a>
+        <a href="vendas.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-textSecondary hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          💰 <span class="md:inline">Vendas</span>
+        </a>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-10 w-full overflow-hidden">
+      <h2 class="text-3xl font-bold text-primary dark:text-secondary mb-8">Visão Geral</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Faturamento Total</p>
+              <h3 class="text-3xl font-bold text-green-600 mt-2">
+                {{ formatarMoeda(dados.faturamento) }}
+              </h3>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full text-green-600 text-xl">💰</div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Vendas Realizadas</p>
+              <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">
+                {{ dados.qtdVendas }}
+              </h3>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full text-blue-600 text-xl">🛒</div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-lg border-l-4 border-purple-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wide">Clientes</p>
+              <h3 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">
+                {{ dados.qtdClientes }}
+              </h3>
+            </div>
+            <div class="p-3 bg-purple-100 rounded-full text-purple-600 text-xl">👥</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-slate-800">
+        <div class="p-6 border-b dark:border-slate-800">
+          <h3 class="text-xl font-bold text-gray-800 dark:text-white">Últimas Vendas</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left whitespace-nowrap md:whitespace-normal">
+            <thead class="bg-gray-50 dark:bg-slate-800">
+              <tr>
+                <th class="px-6 py-3 text-xs uppercase text-gray-500">Data</th>
+                <th class="px-6 py-3 text-xs uppercase text-gray-500">Cliente</th>
+                <th class="px-6 py-3 text-xs uppercase text-gray-500">Valor</th>
+                <th class="px-6 py-3 text-xs uppercase text-gray-500">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-slate-700">
+              <tr v-for="venda in dados.ultimasVendas" :key="venda._id" class="hover:bg-gray-50 dark:hover:bg-slate-800">
+                <td class="px-6 py-4 text-sm">{{ new Date(venda.data).toLocaleDateString('pt-BR') }}</td>
+                <td class="px-6 py-4 text-sm font-medium">{{ venda.cliente ? venda.cliente.nome : 'Consumidor Final' }}</td>
+                <td class="px-6 py-4 text-sm font-bold text-green-600">{{ formatarMoeda(venda.valorTotal) }}</td>
+                <td class="px-6 py-4"><span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Concluída</span></td>
+              </tr>
+              <tr v-if="dados.ultimasVendas.length === 0">
+                <td colspan="4" class="px-6 py-8 text-center text-gray-500">Nenhuma venda registrada ainda.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+  <script src="dashboard.js"></script>
+</body>
+
+</html>

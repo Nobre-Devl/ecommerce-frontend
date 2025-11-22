@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clientes - E-Com+</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#5b21b6',
+            secondary: '#f59e0b',
+            textMain: '#1e293b',
+            textSecondary: '#64748b',
+            background: '#f1f5f9',
+            error: '#dc2626',
+            success: '#16a34a',
+            warning: '#f97316'
+          }
+        }
+      }
+    };
+  </script>
+</head>
+
+<body class="bg-background text-textMain dark:bg-slate-950 dark:text-slate-100 transition-all duration-300">
+  <div id="app" class="flex min-h-screen flex-col md:flex-row">
+
+    <div v-if="alerta.visivel"
+      class="fixed top-5 right-5 p-4 rounded-xl shadow-lg text-white font-semibold z-50 transition-all"
+      :class="alerta.tipo === 'success' ? 'bg-success' : 'bg-error'">
+      {{ alerta.mensagem }}
+    </div>
+
+    <aside
+      class="w-full md:w-72 bg-white dark:bg-slate-900 shadow-xl flex flex-col border-b md:border-b-0 md:border-r dark:border-slate-800 transition-all duration-300">
+
+      <div class="flex items-center justify-between px-6 py-5 border-b dark:border-slate-800">
+        <h1 class="text-2xl font-extrabold text-primary tracking-tight">E-Com+</h1>
+
+        <button @click="toggleTheme"
+          class="p-2 rounded-xl bg-secondary/20 text-secondary hover:bg-secondary hover:text-white transition-all">
+          <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h1M4 12H3m15.364-6.364l.707.707M5.636 18.364l-.707.707m12.728 0l.707-.707M5.636 5.636l-.707-.707M12 5a7 7 0 000 14 7 7 0 000-14z" />
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M21.752 15.002A9.718 9.718 0 0112.004 22C6.478 22 2 17.523 2 12a9.999 9.999 0 0112.728-9.542.75.75 0 01.202 1.314A7.481 7.481 0 0014.5 12a7.478 7.478 0 007.128 4.956.75.75 0 01.124 1.47z" />
+          </svg>
+        </button>
+      </div>
+
+      <nav class="flex-1 p-5 space-y-3 overflow-x-auto md:overflow-visible flex md:block gap-2 md:gap-0">
+        <a href="dashboard.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all text-textSecondary dark:text-slate-400 hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          📊 <span class="md:inline">Dashboard</span>
+        </a>
+
+        <a href="produtos.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all text-textSecondary dark:text-slate-400 hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          📦 <span class="md:inline">Produtos</span>
+        </a>
+
+        <a href="clientes.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all bg-secondary text-white whitespace-nowrap">
+          👥 <span class="md:inline">Clientes</span>
+        </a>
+
+        <a href="fornecedores.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all text-textSecondary dark:text-slate-400 hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          🏭 <span class="md:inline">Fornecedores</span>
+        </a>
+        <a href="vendas.html"
+          class="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all text-textSecondary dark:text-slate-400 hover:bg-secondary/10 hover:text-secondary whitespace-nowrap">
+          💰 <span class="md:inline">Vendas</span>
+        </a>
+      </nav>
+
+      <div class="border-t dark:border-slate-800 p-5 text-sm text-textSecondary dark:text-slate-400 hidden md:block">
+        <div v-if="lojaProfile" class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-slate-700 flex items-center justify-center border border-gray-300">
+            <img v-if="lojaProfile.imagem" :src="lojaProfile.imagem" class="object-cover w-full h-full" />
+            <span v-else class="text-lg">🏬</span>
+          </div>
+
+          <div class="overflow-hidden">
+            <p class="font-semibold text-textMain dark:text-white leading-tight truncate">
+              {{ lojaProfile.nomeFantasia || lojaProfile.nome }}
+            </p>
+            <p class="text-xs text-textSecondary dark:text-slate-400 mt-0.5">
+              © {{ new Date().getFullYear() }} E-Com+
+            </p>
+          </div>
+        </div>
+        <div v-else class="text-center">
+          <p>Carregando...</p>
+        </div>
+      </div>
+
+    </aside>
+
+    <main class="flex-1 p-4 md:p-10 w-full overflow-hidden">
+
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <h2 class="text-3xl font-bold text-primary dark:text-secondary">Clientes</h2>
+        <button @click="toggleForm"
+          class="w-full sm:w-auto bg-secondary text-white px-6 py-2 rounded-xl font-semibold hover:bg-secondary/80 transition-all shadow-md">
+          {{ mostrarForm ? 'Fechar Formulário' : 'Cadastrar Cliente' }}
+        </button>
+      </div>
+
+      <div v-if="mostrarForm"
+        class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6 md:p-8 mb-10 border border-gray-100 dark:border-slate-800">
+
+        <h3 class="text-xl font-bold mb-6 text-primary dark:text-white border-b pb-2">
+          {{ editando ? '✏️ Editar Cliente' : '✨ Novo Cliente' }}
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-textSecondary">Nome Completo</label>
+            <input v-model="novoCliente.nome"
+              class="p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-slate-800 dark:border-slate-700"
+              placeholder="Ex: João Silva" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-textSecondary">Email</label>
+            <input v-model="novoCliente.email" type="email"
+              class="p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-slate-800 dark:border-slate-700"
+              placeholder="Ex: joao@email.com" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-textSecondary">Telefone</label>
+            <input v-model="novoCliente.telefone"
+              class="p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-slate-800 dark:border-slate-700"
+              placeholder="(00) 00000-0000" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-textSecondary">CPF</label>
+            <input v-model="novoCliente.cpf"
+              class="p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-slate-800 dark:border-slate-700"
+              placeholder="000.000.000-00" />
+          </div>
+
+          <div class="flex flex-col gap-1 md:col-span-2">
+            <label class="text-sm font-semibold text-textSecondary">Endereço Completo</label>
+            <input v-model="novoCliente.endereco"
+              class="p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 dark:bg-slate-800 dark:border-slate-700"
+              placeholder="Rua, Número, Bairro, Cidade..." />
+          </div>
+        </div>
+
+        <button @click="salvarCliente"
+          class="w-full bg-primary text-white text-lg font-bold py-3 rounded-xl mt-8 hover:bg-primary/90 transition-all shadow-lg shadow-primary/30">
+          {{ editando ? 'Salvar Alterações' : 'Cadastrar Cliente' }}
+        </button>
+      </div>
+
+      <div
+        class="bg-white dark:bg-slate-900 rounded-2xl shadow-md overflow-hidden border border-gray-100 dark:border-slate-800">
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse whitespace-nowrap md:whitespace-normal">
+            <thead class="bg-gray-50 dark:bg-slate-800 border-b dark:border-slate-700">
+              <tr>
+                <th class="px-6 py-4 text-xs font-bold text-textSecondary uppercase tracking-wider">Nome</th>
+                <th class="px-6 py-4 text-xs font-bold text-textSecondary uppercase tracking-wider">Email</th>
+                <th class="px-6 py-4 text-xs font-bold text-textSecondary uppercase tracking-wider">Telefone</th>
+                <th class="px-6 py-4 text-xs font-bold text-textSecondary uppercase tracking-wider text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
+
+              <tr v-for="cliente in clientes" :key="cliente._id"
+                class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+                <td class="px-6 py-4 font-medium text-textMain dark:text-white">{{ cliente.nome }}</td>
+                <td class="px-6 py-4 text-textSecondary">{{ cliente.email }}</td>
+                <td class="px-6 py-4 text-textSecondary">{{ cliente.telefone }}</td>
+                <td class="px-6 py-4 text-right space-x-2">
+                  <button @click="editarCliente(cliente)"
+                    class="text-blue-600 hover:text-blue-800 font-semibold text-sm transition-colors">Editar</button>
+                  <button @click="excluirCliente(cliente._id)"
+                    class="text-red-500 hover:text-red-700 font-semibold text-sm transition-colors">Excluir</button>
+                </td>
+              </tr>
+
+              <tr v-if="clientes.length === 0">
+                <td colspan="4" class="px-6 py-12 text-center text-textSecondary">
+                  <div class="flex flex-col items-center justify-center">
+                    <span class="text-4xl mb-2">👥</span>
+                    <p>Nenhum cliente cadastrado.</p>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="clientes.js"></script>
+</body>
+
+</html>

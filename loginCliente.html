@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Cliente - E-Com+</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5b21b6',
+                        secondary: '#f59e0b',
+                        textMain: '#1e293b',
+                        textSecondary: '#64748b',
+                        background: '#f1f5f9',
+                        error: '#dc2626',
+                        success: '#16a34a',
+                        warning: '#f97316'
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+
+<body class="bg-background text-textMain dark:bg-slate-950 dark:text-slate-100 transition-all duration-300">
+    
+    <div id="app" class="flex min-h-screen flex-col items-center justify-center p-4 py-10">
+
+        <!-- Botão de Tema com z-index alto para não ficar escondido -->
+        <button @click="toggleTheme" class="fixed top-5 right-5 p-3 rounded-xl bg-white dark:bg-slate-800 shadow-md text-secondary hover:bg-secondary hover:text-white transition-all z-50">
+            <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M4 12H3m15.364-6.364l.707.707M5.636 18.364l-.707.707m12.728 0l.707-.707M5.636 5.636l-.707-.707M12 5a7 7 0 000 14 7 7 0 000-14z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21.752 15.002A9.718 9.718 0 0112.004 22C6.478 22 2 17.523 2 12a9.999 9.999 0 0112.728-9.542.75.75 0 01.202 1.314A7.481 7.481 0 0014.5 12a7.478 7.478 0 007.128 4.956.75.75 0 01.124 1.47z" />
+            </svg>
+        </button>
+
+        <div v-if="alerta.visivel" class="fixed top-5 left-5 p-4 rounded-xl shadow-lg text-white font-semibold z-50 transition-all" :class="alerta.tipo === 'success' ? 'bg-success' : 'bg-error'">
+          {{ alerta.mensagem }}
+        </div>
+
+        <!-- Título responsivo -->
+        <h1 class="text-3xl md:text-4xl font-extrabold text-primary tracking-tight mb-8">E-Com+</h1>
+
+        <!-- Card com padding ajustável (p-6 mobile, p-8 desktop) -->
+        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 md:p-8 transition-all">
+            
+            <h2 class="text-2xl font-bold text-center mb-6 text-primary dark:text-secondary">
+                {{ isRegistering ? 'Cadastre-se como Cliente' : 'Acessar Catálogo' }}
+            </h2>
+
+            <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
+                
+                <input v-model="formData.email" type="email" placeholder="Email de Acesso" required class="p-3 border rounded-lg dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary" />
+                <input v-model="formData.senha" type="password" placeholder="Senha" required class="p-3 border rounded-lg dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary" />
+                
+                <div v-if="isRegistering" class="space-y-4 pt-4 animate-fade-in-down">
+                    
+                    <h3 class="text-lg font-semibold text-textSecondary dark:text-slate-400 border-b pb-2">Seus Dados</h3>
+                    
+                    <!-- Grid responsivo para dados pessoais -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input v-model="formData.nome" type="text" placeholder="Nome Completo" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                        <input v-model="formData.cpf" type="text" placeholder="CPF" class="p-3 border rounded-lg dark:bg-slate-800" />
+                    </div>
+                    
+                    <input v-model="formData.telefone" type="tel" placeholder="Telefone / WhatsApp" required class="p-3 border rounded-lg dark:bg-slate-800" />
+
+                    <h3 class="text-lg font-semibold mt-4 mb-2 text-textSecondary dark:text-slate-400 border-b pb-2">Endereço</h3>
+                    
+                    <!-- Grids responsivos para endereço -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input v-model="formData.endereco.cep" type="text" placeholder="CEP" class="p-3 border rounded-lg dark:bg-slate-800 md:col-span-1" />
+                        <input v-model="formData.endereco.rua" type="text" placeholder="Logradouro" class="p-3 border rounded-lg dark:bg-slate-800 md:col-span-2" />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input v-model="formData.endereco.numero" type="text" placeholder="Número" class="p-3 border rounded-lg dark:bg-slate-800" />
+                        <input v-model="formData.endereco.complemento" type="text" placeholder="Complemento" class="p-3 border rounded-lg dark:bg-slate-800" />
+                        <input v-model="formData.endereco.bairro" type="text" placeholder="Bairro" class="p-3 border rounded-lg dark:bg-slate-800" />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input v-model="formData.endereco.cidade" type="text" placeholder="Cidade" class="p-3 border rounded-lg dark:bg-slate-800 md:col-span-2" />
+                        <input v-model="formData.endereco.estado" type="text" placeholder="UF" maxlength="2" class="p-3 border rounded-lg dark:bg-slate-800" />
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-secondary text-white p-3 rounded-xl mt-3 font-semibold hover:bg-secondary/90 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    {{ isRegistering ? 'Criar Conta' : 'Entrar' }}
+                </button>
+            </form>
+
+            <button @click="toggleRegister" class="w-full text-center mt-6 text-sm text-textSecondary dark:text-slate-400 hover:text-primary dark:hover:text-secondary underline">
+                {{ isRegistering ? 'Já tem uma conta? Faça Login' : 'Não tem conta? Cadastre-se' }}
+            </button>
+            
+            <a href="index.html" class="block w-full text-center mt-3 text-sm text-textSecondary dark:text-slate-400 hover:text-primary dark:hover:text-secondary">← Voltar</a>
+
+        </div>
+    </div>
+
+    <script src="loginCliente.js"></script>
+    <style>
+        .animate-fade-in-down { animation: fadeInDown 0.3s ease-out; }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</body>
+</html>

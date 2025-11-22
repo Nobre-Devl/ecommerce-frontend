@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catálogo - E-Com+</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5b21b6',
+                        secondary: '#f59e0b',
+                        textMain: '#1e293b',
+                        textSecondary: '#64748b',
+                        background: '#f1f5f9',
+                        error: '#dc2626',
+                        success: '#16a34a',
+                        warning: '#f97316'
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+
+<body class="bg-background text-textMain dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden">
+    <div id="app" class="flex min-h-screen flex-col">
+
+        <div v-if="alerta.visivel" class="fixed top-5 right-5 p-4 rounded-xl shadow-lg text-white font-semibold z-[60] transition-all" :class="alerta.tipo === 'success' ? 'bg-success' : (alerta.tipo === 'warning' ? 'bg-warning' : 'bg-error')">
+            {{ alerta.mensagem }}
+        </div>
+
+        <header class="w-full bg-white dark:bg-slate-900 shadow-md border-b dark:border-slate-800 sticky top-0 z-40">
+            <div class="flex items-center justify-between px-4 py-3 md:px-6 md:py-4 max-w-7xl mx-auto">
+                
+                <h1 class="text-2xl md:text-3xl font-extrabold text-primary tracking-tight cursor-pointer hover:scale-105 transition-transform" @click="limparFiltros">
+                    E-Com+
+                </h1>
+
+                <div class="flex items-center gap-3 md:gap-4">
+                    
+                    <button @click="toggleTheme" class="p-2 md:p-3 rounded-xl bg-white dark:bg-slate-800 shadow-md text-secondary hover:bg-secondary hover:text-white transition-all">
+                        <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M4 12H3m15.364-6.364l.707.707M5.636 18.364l-.707.707m12.728 0l.707-.707M5.636 5.636l-.707-.707M12 5a7 7 0 000 14 7 7 0 000-14z" />
+                        </svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M21.752 15.002A9.718 9.718 0 0112.004 22C6.478 22 2 17.523 2 12a9.999 9.999 0 0112.728-9.542.75.75 0 01.202 1.314A7.481 7.481 0 0014.5 12a7.478 7.478 0 007.128 4.956.75.75 0 01.124 1.47z" />
+                        </svg>
+                    </button>
+
+                    <a :href="isLoggedIn ? 'usuario.html' : 'loginCliente.html'" @click="isLoggedIn ? fazerLogout() : null" class="text-sm font-bold text-textSecondary dark:text-slate-400 hover:text-primary dark:hover:text-secondary transition-colors uppercase tracking-wide">
+                        {{ isLoggedIn ? 'Sair' : 'Entrar' }}
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 p-4 md:p-10 max-w-7xl mx-auto w-full">
+            
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
+                <h2 class="text-2xl md:text-3xl font-bold text-primary dark:text-secondary">Catálogo</h2>
+                <span class="text-sm text-textSecondary">{{ produtosFiltrados.length }} produtos encontrados</span>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-5 md:p-6 mb-10 border border-gray-100 dark:border-slate-800">
+                <h3 class="font-semibold text-lg mb-4 border-b dark:border-slate-700 pb-2 text-textMain dark:text-white">Filtrar Resultados</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                    <div class="col-span-1">
+                        <label class="block text-xs font-bold uppercase text-textSecondary mb-1">Categoria</label>
+                        <select v-model="filtroCategoria" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm">
+                            <option value="">Todas</option>
+                            <option v-for="cat in categoriasDisponiveis" :key="cat" :value="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-xs font-bold uppercase text-textSecondary mb-1">Loja</label>
+                        <select v-model="filtroLojaId" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm">
+                            <option value="">Todas</option>
+                            <option v-for="loja in lojasDisponiveis" :key="loja._id" :value="loja._id">{{ loja.nomeFantasia || loja.nome }}</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-xs font-bold uppercase text-textSecondary mb-1">Mínimo (R$)</label>
+                        <input v-model.number="filtroPrecoMin" type="number" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm" />
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-xs font-bold uppercase text-textSecondary mb-1">Máximo (R$)</label>
+                        <input v-model.number="filtroPrecoMax" type="number" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700 focus:ring-2 focus:ring-primary outline-none text-sm" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div v-for="prod in produtosFiltrados" :key="prod._id" class="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border dark:border-slate-800 flex flex-col overflow-hidden">
+                    
+                    <div class="h-56 bg-gray-100 dark:bg-slate-800 relative overflow-hidden">
+                        <img v-if="prod.imagem" :src="prod.imagem" class="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500" />
+                        <div v-else class="w-full h-full flex items-center justify-center text-4xl">📦</div>
+                        
+                        <div v-if="prod.estoque <= 0" class="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                            <span class="text-white font-bold border-2 border-white px-4 py-1 rounded-lg transform -rotate-12">ESGOTADO</span>
+                        </div>
+                    </div>
+
+                    <div class="p-5 flex flex-col flex-1">
+                        <h3 class="font-bold text-lg leading-tight text-textMain dark:text-white line-clamp-1" :title="prod.nome">{{ prod.nome }}</h3>
+                        
+                        <p class="text-sm text-textSecondary dark:text-slate-400 mb-4 line-clamp-2">{{ prod.desc }}</p>
+                        
+                        <div class="mt-auto pt-4 border-t dark:border-slate-800">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-textSecondary flex items-center gap-1 truncate max-w-[120px]" :title="prod.lojaId ? (prod.lojaId.nomeFantasia || prod.lojaId.nome) : 'Parceiro'">
+                                    🏬 {{ prod.lojaId ? (prod.lojaId.nomeFantasia || prod.lojaId.nome) : 'Parceiro' }}
+                                </span>
+                                <p class="font-bold text-2xl text-secondary">R$ {{ Number(prod.preco).toFixed(2) }}</p>
+                            </div>
+                            
+                            <div class="mt-3 text-center">
+                                <span v-if="prod.estoque > 0" class="text-sm font-semibold text-success">
+                                    Disponível em estoque
+                                </span>
+                                <span v-else class="text-sm font-semibold text-error">
+                                    Indisponível
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="produtosFiltrados.length === 0" class="text-center mt-10 p-10 bg-white dark:bg-slate-900 rounded-2xl shadow">
+                <p class="text-xl text-textSecondary dark:text-slate-400">Nenhum produto encontrado com esses filtros.</p>
+                <button @click="limparFiltros" class="text-primary hover:underline mt-2 font-bold">Limpar filtros</button>
+            </div>
+
+        </main>
+    </div>
+    <script src="usuario.js"></script>
+</body>
+</html>

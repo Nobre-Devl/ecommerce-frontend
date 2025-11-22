@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - E-Com+</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5b21b6',
+                        secondary: '#f59e0b',
+                        textMain: '#1e293b',
+                        textSecondary: '#64748b',
+                        background: '#f1f5f9',
+                        error: '#dc2626',
+                        success: '#16a34a',
+                        warning: '#f97316'
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+
+<body class="bg-background text-textMain dark:bg-slate-950 dark:text-slate-100 transition-all duration-300">
+    
+    <div id="app" class="flex min-h-screen flex-col items-center justify-center p-4 py-10">
+
+        <button @click="toggleTheme" class="fixed top-5 right-5 p-3 rounded-xl bg-white dark:bg-slate-800 shadow-md text-secondary hover:bg-secondary hover:text-white transition-all z-50">
+            <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 3v1m0 16v1m9-9h1M4 12H3m15.364-6.364l.707.707M5.636 18.364l-.707.707m12.728 0l.707-.707M5.636 5.636l-.707-.707M12 5a7 7 0 000 14 7 7 0 000-14z" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor"
+                viewBox="0 0 24 24">
+                <path d="M21.752 15.002A9.718 9.718 0 0112.004 22C6.478 22 2 17.523 2 12a9.999 9.999 0 0112.728-9.542.75.75 0 01.202 1.314A7.481 7.481 0 0014.5 12a7.478 7.478 0 007.128 4.956.75.75 0 01.124 1.47z" />
+            </svg>
+        </button>
+
+        <div 
+            v-if="alerta.visivel" 
+            class="fixed top-5 left-5 p-4 rounded-xl shadow-lg text-white font-semibold z-50 transition-all"
+            :class="alerta.tipo === 'success' ? 'bg-success' : 'bg-error'"
+        >
+            {{ alerta.mensagem }}
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-extrabold text-primary tracking-tight mb-8 text-center">E-Com+</h1>
+
+        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 md:p-8 transition-all">
+            
+            <h2 class="text-2xl font-bold text-center mb-6 text-primary dark:text-secondary">
+                {{ isRegistering ? 'Criar Nova Conta de Loja' : 'Acessar Painel' }}
+            </h2>
+
+            <form @submit.prevent="handleSubmit" class="flex flex-col gap-4">
+                
+                <div v-if="isRegistering" class="flex flex-col items-center gap-4">
+                    <div class="w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                        <img v-if="formData.imagemPreview" :src="formData.imagemPreview" class="object-cover w-full h-full" />
+                        <span v-else class="text-3xl">🏬</span>
+                    </div>
+                    <label for="upload-logo" class="w-full max-w-xs text-center cursor-pointer p-2 rounded-xl font-semibold transition-all bg-secondary/20 text-secondary hover:bg-secondary hover:text-white">
+                        Selecionar Logo
+                    </label>
+                    <input id="upload-logo" type="file" accept="image/*" @change="carregarImagem" class="hidden" />
+                </div>
+
+                <div v-if="isRegistering" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input v-model="formData.nome" type="text" placeholder="Nome da Loja (Razão Social)" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                    <input v-model="formData.nomeFantasia" type="text" placeholder="Nome Fantasia" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                    <input v-model="formData.cnpj" type="text" placeholder="CNPJ" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                    <input v-model="formData.telefone" type="tel" placeholder="Telefone / WhatsApp" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                </div>
+
+                <input v-model="formData.email" type="email" placeholder="Email de Acesso" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                
+                <input v-model="formData.password" type="password" placeholder="Senha" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                
+                <div v-if="isRegistering">
+                    <h3 class="text-lg font-semibold mt-4 mb-2 text-textSecondary dark:text-slate-400 border-b pb-1">Endereço da Loja</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input v-model="formData.endereco.cep" type="text" placeholder="CEP" required class="p-3 border rounded-lg dark:bg-slate-800 md:col-span-1" />
+                        <input v-model="formData.endereco.logradouro" type="text" placeholder="Logradouro" required class="p-3 border rounded-lg dark:bg-slate-800 md:col-span-2" />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <input v-model="formData.endereco.numero" type="text" placeholder="Número" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                        <input v-model="formData.endereco.complemento" type="text" placeholder="Complemento" class="p-3 border rounded-lg dark:bg-slate-800" />
+                        <input v-model="formData.endereco.bairro" type="text" placeholder="Bairro" required class="p-3 border rounded-lg dark:bg-slate-800" />
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <input v-model="formData.endereco.cidade" type="text" placeholder="Cidade" required class="p-3 border rounded-lg dark:bg-slate-800 md:col-span-2" />
+                        <input v-model="formData.endereco.estado" type="text" placeholder="UF" required maxlength="2" class="p-3 border rounded-lg dark:bg-slate-800" />
+                    </div>
+                </div>
+
+                <button type="submit" class="bg-primary text-white p-3 rounded-xl mt-3 font-semibold hover:bg-secondary transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    {{ isRegistering ? 'Cadastrar Minha Loja' : 'Entrar' }}
+                </button>
+            </form>
+
+            <button @click="toggleRegister" class="w-full text-center mt-6 text-sm text-textSecondary dark:text-slate-400 hover:text-primary dark:hover:text-secondary underline">
+                {{ isRegistering ? 'Já tem uma conta? Faça Login' : 'Não tem uma conta? Cadastre-se' }}
+            </button>
+            
+            <a href="index.html" class="block w-full text-center mt-4 text-sm text-textSecondary dark:text-slate-400 hover:text-primary dark:hover:text-secondary">
+                ← Voltar para seleção de perfil
+            </a>
+
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
