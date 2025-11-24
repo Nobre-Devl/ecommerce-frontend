@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fornecedores - E-Com+</title>
+  <title>Despesas - E-Com+</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -92,32 +92,63 @@
     <main class="flex-1 p-4 md:p-10 w-full overflow-hidden">
 
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <h2 class="text-3xl font-bold text-primary dark:text-secondary">Fornecedores</h2>
+        <div>
+            <h2 class="text-3xl font-bold text-primary dark:text-secondary">Contas a Pagar</h2>
+            <p class="text-sm text-textSecondary mt-1">
+                Pendente: <span class="font-bold text-error">{{ formatarMoeda(totalPendente) }}</span>
+            </p>
+        </div>
         <button @click="toggleForm"
           class="w-full sm:w-auto bg-secondary text-white px-4 py-2 rounded-xl hover:bg-secondary/80 transition-all shadow">
-          {{ mostrarForm ? 'Fechar' : 'Cadastrar Fornecedor' }}
+          {{ mostrarForm ? 'Fechar' : 'Nova Despesa' }}
         </button>
       </div>
 
       <div v-if="mostrarForm"
         class="mx-auto mb-8 bg-white dark:bg-slate-900 rounded-xl p-6 shadow-md w-full max-w-2xl transition-all">
-        <h3 class="text-xl font-bold mb-4 text-primary dark:text-secondary">{{ editando ? 'Editar Fornecedor' : 'Novo Fornecedor' }}</h3>
+        <h3 class="text-xl font-bold mb-4 text-primary dark:text-secondary">{{ editando ? 'Editar Despesa' : 'Nova Despesa' }}</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input v-model="novoFornecedor.RazaoSocial" placeholder="Razão Social"
-            class="p-2 border rounded-lg dark:bg-slate-800 w-full" />
-          <input v-model="novoFornecedor.CNPJ" placeholder="CNPJ" class="p-2 border rounded-lg dark:bg-slate-800 w-full" />
-          <input v-model="novoFornecedor.email" type="email" placeholder="Email"
-            class="p-2 border rounded-lg dark:bg-slate-800 w-full" />
-          <input v-model="novoFornecedor.telefone" placeholder="Telefone"
-            class="p-2 border rounded-lg dark:bg-slate-800 w-full" />
+          
           <div class="md:col-span-2">
-            <input v-model="novoFornecedor.endereco" placeholder="Endereço Completo"
-              class="w-full p-2 border rounded-lg dark:bg-slate-800" />
+              <label class="block text-sm text-textSecondary mb-1">Descrição</label>
+              <input v-model="novaDespesa.descricao" placeholder="Ex: Conta de Luz"
+                class="p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 w-full" />
           </div>
+
+          <div>
+              <label class="block text-sm text-textSecondary mb-1">Valor (R$)</label>
+              <input v-model="novaDespesa.valor" type="number" step="0.01" placeholder="0.00"
+                class="p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 w-full" />
+          </div>
+
+          <div>
+              <label class="block text-sm text-textSecondary mb-1">Data Vencimento</label>
+              <input v-model="novaDespesa.dataVencimento" type="date"
+                class="p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 w-full" />
+          </div>
+
+          <div>
+              <label class="block text-sm text-textSecondary mb-1">Tipo</label>
+              <select v-model="novaDespesa.tipo" class="p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 w-full">
+                  <option value="Variavel">Variável</option>
+                  <option value="Fixa">Fixa</option>
+                  <option value="Emergencia">Emergência</option>
+              </select>
+          </div>
+
+          <div>
+            <label class="block text-sm text-textSecondary mb-1">Status</label>
+            <select v-model="novaDespesa.status" class="p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 w-full">
+                <option value="Pendente">Pendente</option>
+                <option value="Pago">Pago</option>
+                <option value="Atrasado">Atrasado</option>
+            </select>
         </div>
-        <button @click="salvarFornecedor"
+
+        </div>
+        <button @click="salvarDespesa"
           class="w-full bg-primary text-white px-4 py-2 rounded-xl mt-4 hover:bg-secondary transition-all">
-          {{ editando ? 'Salvar Alterações' : 'Cadastrar Fornecedor' }}
+          {{ editando ? 'Salvar Alterações' : 'Registrar Conta' }}
         </button>
       </div>
 
@@ -131,26 +162,47 @@
       </div>
 
       <div v-if="viewMode==='cards'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="forn in fornecedores" :key="forn._id"
-          class="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow hover:shadow-lg transition-all relative">
+        <div v-for="despesa in despesas" :key="despesa._id"
+          class="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow hover:shadow-lg transition-all relative border-l-4"
+          :class="statusBorder(despesa.status)">
 
           <div class="absolute top-3 right-3 flex gap-2">
-            <button @click="editarFornecedor(forn)" class="text-blue-500 hover:text-blue-700">✏️</button>
-            <button @click="excluirFornecedor(forn._id)" class="text-red-500 hover:text-red-700">🗑️</button>
+            <button @click="editarDespesa(despesa)" class="text-blue-500 hover:text-blue-700">✏️</button>
+            <button @click="excluirDespesa(despesa._id)" class="text-red-500 hover:text-red-700">🗑️</button>
           </div>
 
-          <div
-            class="h-24 bg-gradient-to-br from-primary/20 to-secondary/30 rounded-xl mb-3 flex items-center justify-center text-4xl">
-            🏭
+          <div class="flex justify-between items-start mb-2 pr-16">
+              <div>
+                 <h3 class="font-bold text-lg truncate">{{ despesa.descricao }}</h3>
+                 <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300">
+                     {{ despesa.tipo }}
+                 </span>
+              </div>
           </div>
-          <h3 class="font-bold text-lg truncate">{{ forn.RazaoSocial }}</h3>
-          <p class="text-textSecondary dark:text-slate-400 text-sm truncate">{{ forn.email }}</p>
-          <p class="text-textSecondary dark:text-slate-400 text-xs mt-1">CNPJ: {{ forn.CNPJ }}</p>
-          <p class="text-secondary text-xs mt-2">{{ forn.telefone }}</p>
+
+          <div class="mt-4 space-y-1">
+              <p class="text-2xl font-bold text-textMain dark:text-white">
+                  {{ formatarMoeda(despesa.valor) }}
+              </p>
+              <p class="text-sm text-textSecondary flex justify-between">
+                  <span>Vence: {{ formatarData(despesa.dataVencimento) }}</span>
+              </p>
+          </div>
+
+          <div class="mt-4 flex justify-between items-center">
+             <span :class="statusClass(despesa.status)" class="px-2 py-1 rounded-lg text-xs font-bold uppercase">
+                 {{ despesa.status }}
+             </span>
+             <button v-if="despesa.status !== 'Pago'" 
+                @click="pagarConta(despesa._id)"
+                class="text-sm text-success hover:text-green-700 font-bold flex items-center gap-1">
+                ✅ Pagar
+             </button>
+          </div>
         </div>
 
-        <div v-if="fornecedores.length === 0" class="col-span-full text-center text-textSecondary py-10">
-          Nenhum fornecedor cadastrado.
+        <div v-if="despesas.length === 0" class="col-span-full text-center text-textSecondary py-10">
+          Nenhuma despesa pendente. Tudo pago! 🎉
         </div>
       </div>
 
@@ -158,27 +210,39 @@
         <table class="min-w-full text-left whitespace-nowrap md:whitespace-normal">
           <thead class="border-b border-slate-200 dark:border-slate-700">
             <tr>
-              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">Razão Social</th>
-              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">CNPJ</th>
-              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">Email</th>
-              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">Telefone</th>
-              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">Ações</th>
+              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">Descrição</th>
+              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">Vencimento</th>
+              <th class="px-4 py-2 text-textSecondary dark:text-slate-400">Valor</th>
+              <th class="px-4 py-2 text-textSecondary dark:text-slate-400 text-center">Status</th>
+              <th class="px-4 py-2 text-textSecondary dark:text-slate-400 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="forn in fornecedores" :key="forn._id"
+            <tr v-for="despesa in despesas" :key="despesa._id"
               class="border-b border-slate-200 dark:border-slate-700 hover:bg-secondary/10 transition-all">
-              <td class="px-4 py-2">{{ forn.RazaoSocial }}</td>
-              <td class="px-4 py-2">{{ forn.CNPJ }}</td>
-              <td class="px-4 py-2">{{ forn.email }}</td>
-              <td class="px-4 py-2">{{ forn.telefone }}</td>
-              <td class="px-4 py-2 flex gap-2">
-                <button @click="editarFornecedor(forn)" class="text-blue-500 hover:text-blue-700">Editar</button>
-                <button @click="excluirFornecedor(forn._id)" class="text-red-500 hover:text-red-700">Excluir</button>
+              <td class="px-4 py-2 font-medium">
+                  {{ despesa.descricao }}
+                  <div class="text-xs text-textSecondary">{{ despesa.tipo }}</div>
+              </td>
+              <td class="px-4 py-2">{{ formatarData(despesa.dataVencimento) }}</td>
+              <td class="px-4 py-2 font-bold">{{ formatarMoeda(despesa.valor) }}</td>
+              <td class="px-4 py-2 text-center">
+                  <span :class="statusClass(despesa.status)" class="px-2 py-1 rounded-full text-xs font-bold">
+                    {{ despesa.status }}
+                  </span>
+              </td>
+              <td class="px-4 py-2 flex gap-3 justify-end items-center">
+                <button v-if="despesa.status !== 'Pago'" 
+                   @click="pagarConta(despesa._id)" 
+                   class="text-success font-bold text-sm hover:underline">
+                   Pagar
+                </button>
+                <button @click="editarDespesa(despesa)" class="text-blue-500 hover:text-blue-700">✏️</button>
+                <button @click="excluirDespesa(despesa._id)" class="text-red-500 hover:text-red-700">🗑️</button>
               </td>
             </tr>
-            <tr v-if="fornecedores.length === 0">
-              <td colspan="5" class="px-6 py-10 text-center text-textSecondary">Nenhum fornecedor encontrado.</td>
+            <tr v-if="despesas.length === 0">
+              <td colspan="5" class="px-6 py-10 text-center text-textSecondary">Nenhuma conta encontrada.</td>
             </tr>
           </tbody>
         </table>
@@ -187,7 +251,7 @@
     </main>
   </div>
 
-  <script src="fornecedores.js"></script>
+  <script src="despesas.js"></script>
 </body>
 
 </html>
