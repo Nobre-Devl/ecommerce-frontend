@@ -7,9 +7,9 @@ createApp({
       isDark: false,
       formData: {
         nome: '',
-        nomeFantasia: '',
+        nomeFantasia: '', // O HTML preenche isso aqui corretamente
         email: '',
-        password: '',
+        password: '',     // No front chamamos de password
         cnpj: '',
         telefone: '',
         imagem: '',
@@ -97,22 +97,39 @@ createApp({
     },
 
     async register() {
+      // 1. VERIFICAÇÃO DE SEGURANÇA (Debug)
+      console.log("Dados do Front:", this.formData);
+      
+      if(!this.formData.nomeFantasia) {
+         this.mostrarAlerta('Preencha o Nome Fantasia!', 'error');
+         return;
+      }
+
       try {
+        // 2. CORREÇÃO IMPORTANTE: 
+        // Cria um objeto novo trocando 'password' por 'senha' para o Backend entender
+        const dadosParaEnviar = {
+            ...this.formData,
+            senha: this.formData.password // O Backend espera 'senha', não 'password'
+        };
+
         const res = await fetch('https://ecommerce-backend-green-iota.vercel.app/api/loja/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.formData)
+          body: JSON.stringify(dadosParaEnviar)
         });
 
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.message || 'Erro ao cadastrar.');
+          // Mostra o erro exato que veio do servidor
+          throw new Error(errorData.error || errorData.message || 'Erro ao cadastrar.');
         }
 
         this.mostrarAlerta('✅ Loja cadastrada com sucesso! Faça o login.', 'success');
         this.isRegistering = false; 
         this.resetForm();
       } catch (err) {
+        console.error("Erro no cadastro:", err);
         this.mostrarAlerta('❌ ' + err.message, 'error');
       }
     },
@@ -122,9 +139,12 @@ createApp({
         const res = await fetch('https://ecommerce-backend-green-iota.vercel.app/api/loja/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          // Aqui também mandamos 'senha' se o backend esperar 'senha'
+          // Se o backend de login esperar 'password', mantenha como estava. 
+          // Mas geralmente é 'senha' no Model.
           body: JSON.stringify({
             email: this.formData.email,
-            password: this.formData.password
+            senha: this.formData.password 
           })
         });
         
